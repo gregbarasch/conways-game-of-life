@@ -4,8 +4,8 @@ export class GameScene extends Phaser.Scene {
 
     private static readonly PURPLE = 0x5f0983
     private static readonly BLACK = 0x000000
-    private static readonly X_NUM = 40
-    private static readonly Y_NUM = 40
+    private static readonly X_NUM = 60
+    private static readonly Y_NUM = 60
 
     private worldTexture: Phaser.GameObjects.RenderTexture
     private grid: SquareInfo[][]
@@ -29,9 +29,9 @@ export class GameScene extends Phaser.Scene {
         }, this)
 
         // Based on verticle axis
-        this.sqBorderThickness = Math.ceil(this.cameras.main.height / GameScene.X_NUM / 20)
-        this.sqHeight = Math.ceil(this.cameras.main.height / GameScene.Y_NUM)
-        this.sqWidth = Math.ceil(this.cameras.main.width / GameScene.X_NUM)
+        this.sqBorderThickness = Math.ceil(this.cameras.main.height / GameScene.X_NUM / 19)
+        this.sqHeight = this.cameras.main.height / GameScene.Y_NUM
+        this.sqWidth = this.cameras.main.width / GameScene.X_NUM
 
         this.purpleSquare = new Phaser.GameObjects.Rectangle(this, 0, 0, this.sqWidth, this.sqHeight)
             .setStrokeStyle(this.sqBorderThickness, GameScene.BLACK)
@@ -43,8 +43,10 @@ export class GameScene extends Phaser.Scene {
         for (let y = 0; y < GameScene.Y_NUM; y++) {
             this.grid[y] = []
             for (let x = 0; x < GameScene.X_NUM; x++) {
-                this.worldTexture.draw(this.blackSquare, this.sqWidth*x, this.sqHeight*y)
-                this.grid[y][x] = new SquareInfo(x, y, GameScene.BLACK)
+                let xPixel = this.xPixelFromTile(x)
+                let yPixel = this.yPixelFromTile(y)
+                this.worldTexture.draw(this.blackSquare, xPixel, yPixel)
+                this.grid[y][x] = new SquareInfo(xPixel, yPixel, GameScene.BLACK)
             }
         }
     }
@@ -54,9 +56,25 @@ export class GameScene extends Phaser.Scene {
         super.update(time, delta)
     }
 
+    xTileFromPixel(xPixel: number): number {
+        return Math.floor(xPixel/this.sqWidth)
+    }
+
+    xPixelFromTile(x: number): number {
+        return this.sqWidth*x + this.sqWidth/2
+    }
+
+    yTileFromPixel(yPixel: number): number {
+        return Math.floor(yPixel/this.sqHeight)
+    }
+
+    yPixelFromTile(y: number): number {
+        return this.sqHeight*y + this.sqHeight/2
+    }
+
     toggleTile(xPixel: number, yPixel: number) {
-        let x = Math.floor(xPixel / this.sqWidth)
-        let y = Math.floor(yPixel / this.sqHeight)
+        let x = this.xTileFromPixel(xPixel)
+        let y = this.yTileFromPixel(yPixel)
         let color = this.grid[y][x].color == GameScene.BLACK  ? GameScene.PURPLE : GameScene.BLACK
         let square = color == GameScene.BLACK ? this.blackSquare : this.purpleSquare
 
@@ -64,12 +82,13 @@ export class GameScene extends Phaser.Scene {
         console.log("yPix: " + yPixel)
         console.log("cam: " + this.cameras.main.height)
 
-        this.grid[y][x].setColor(color)
-        this.worldTexture.draw(square, this.sqWidth*x, this.sqHeight*y)
+        let squareInfo = this.grid[y][x].setColor(color)
+        this.worldTexture.draw(square, squareInfo.x, squareInfo.y)
     }
 }
 
 class SquareInfo {
+    // These should be pixel locations, not tile numbers
     public readonly x: number
     public readonly y: number
     public color: number
@@ -80,7 +99,8 @@ class SquareInfo {
         this.color = color
     }
 
-    setColor(color: number) {
+    setColor(color: number): SquareInfo {
         this.color = color
+        return this
     }
 }

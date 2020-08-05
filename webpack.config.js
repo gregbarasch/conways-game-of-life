@@ -21,7 +21,13 @@ module.exports = {
             {
                 test: /\.ts$/,
                 use: 'ts-loader'
-            }
+            },
+            {
+                test: /\.(png|svg|jpg|gif)$/,
+                use: [
+                    'file-loader',
+                ],
+            },
         ]
     },
     entry: './src/ts/index.ts',
@@ -30,7 +36,7 @@ module.exports = {
         path: path.resolve(__dirname, 'dist'),
     },
     resolve: {
-        extensions: [ '.tsx', '.ts', '.js' ],
+        extensions: [ '.tsx', '.ts', '.js', '.jpg' ],
     },
     devServer: {
         contentBase: path.join(__dirname, 'dist'),

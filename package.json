@@ -1,24 +1,23 @@
 {
   "name": "conways-game-of-life",
   "version": "1.0.0",
-  "description": "",
+  "description": "Conway's Game of Life",
   "private": true,
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "webpack",
-    "watch": "webpack --watch",
     "start": "webpack-dev-server"
   },
   "keywords": [],
   "author": "Greg Barasch",
   "license": "ISC",
   "devDependencies": {
-    "webpack": "^4.44.1",
-    "webpack-cli": "^3.3.12",
-    "webpack-dev-server": "^3.11.0",
-    "css-loader": "^0.28.11",
-    "ts-loader": "^8.0.2",
-    "typescript": "^3.9.5"
+    "webpack": "4.44.1",
+    "webpack-cli": "3.3.12",
+    "webpack-dev-server": "3.11.0",
+    "file-loader": "6.0.0",
+    "ts-loader": "8.0.2",
+    "typescript": "3.9.7"
   },
   "dependencies": {
     "phaser": "3.24.1"

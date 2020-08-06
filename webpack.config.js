@@ -25,9 +25,7 @@ module.exports = {
             },
             {
                 test: /\.(png|svg|jpg|gif)$/,
-                use: [
-                    'file-loader',
-                ],
+                use: 'file-loader'
             },
         ]
     },
@@ -37,7 +35,7 @@ module.exports = {
         path: path.resolve(__dirname, 'dist'),
     },
     resolve: {
-        extensions: [ '.tsx', '.ts', '.js', '.jpg' ],
+        extensions: [ '.tsx', '.ts', '.js'],
     },
     devServer: {
         contentBase: path.join(__dirname, 'dist'),

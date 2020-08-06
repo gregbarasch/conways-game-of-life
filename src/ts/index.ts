@@ -11,4 +11,3 @@ const config: Phaser.Types.Core.GameConfig = {
 
 let game = new Phaser.Game(config)
 game.scene.add(GameScene.NAME, new GameScene(config), true)
-

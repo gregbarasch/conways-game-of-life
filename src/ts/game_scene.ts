@@ -2,16 +2,21 @@ export class GameScene extends Phaser.Scene {
 
     public static readonly NAME: string = "game_scene"
 
-    private static readonly PURPLE = 0x5f0983
+    private static readonly PURPLE = 0x6600ff
     private static readonly BLACK = 0x000000
+    private static readonly BLUE = 0x3333ff
+    // grid dimensions
     private static readonly X_NUM = 60
     private static readonly Y_NUM = 60
+    // update loop speed
     private static readonly UPDATE_MS = 500
 
     private worldTexture: Phaser.GameObjects.RenderTexture
     private grid: SquareInfo[][]
 
+    // enables and disables our game ticks
     private running: boolean
+    // slow down our update loop by keeping track of time elapsed
     private timer: number
 
     private purpleSquare: Phaser.GameObjects.Rectangle
@@ -27,30 +32,32 @@ export class GameScene extends Phaser.Scene {
         config.key = GameScene.NAME
         super(config)
         this.grid = []
-        this.running = false // FIXME inline this stuff? super needs to be called first?
+        this.running = false // FIXME inline this stuff? super needs to be called first
         this.timer = 0
     }
 
     preload() {
         this.enterKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER)
 
-        this.worldTexture = this.add.renderTexture(0, 0, this.cameras.main.width, this.cameras.main.height).setInteractive()
+        // setup render texture and listen for clicks
+        this.worldTexture = this.add.renderTexture(0, 0, this.cameras.main.width, this.cameras.main.height)
+        this.worldTexture.setInteractive()
         this.worldTexture.on(Phaser.Input.Events.POINTER_DOWN, function(pointer: Phaser.Input.Pointer) {
             this.toggleTileByPixel(pointer.worldX, pointer.worldY)
         }, this)
 
-        // Based on verticle axis
+        // thickness based on vertical axis
         this.sqBorderThickness = Math.ceil(this.cameras.main.height / GameScene.X_NUM / 19)
         this.sqHeight = this.cameras.main.height / GameScene.Y_NUM
         this.sqWidth = this.cameras.main.width / GameScene.X_NUM
 
         this.purpleSquare = new Phaser.GameObjects.Rectangle(this, 0, 0, this.sqWidth, this.sqHeight)
             .setName("purple")
-            .setStrokeStyle(this.sqBorderThickness, GameScene.BLACK)
+            .setStrokeStyle(this.sqBorderThickness, GameScene.BLUE)
             .setFillStyle(GameScene.PURPLE)
         this.blackSquare = new Phaser.GameObjects.Rectangle(this, 0, 0, this.sqWidth, this.sqHeight)
             .setName("black")
-            .setStrokeStyle(this.sqBorderThickness, GameScene.PURPLE)
+            .setStrokeStyle(this.sqBorderThickness, GameScene.BLUE)
             .setFillStyle(GameScene.BLACK)
 
         // Creates initial board state
@@ -73,21 +80,25 @@ export class GameScene extends Phaser.Scene {
     }
 
     update(time: number, delta: number) {
-        super.update(time, delta)
         if (Phaser.Input.Keyboard.JustDown(this.enterKey)) {
             this.running = !this.running
         }
 
         if (this.running) {
+            // keep track of time elapsed between update(...) calls via this.timer
             this.timer += delta
-            if (this.timer > GameScene.UPDATE_MS) {
+
+            // once enough time has elapsed, we run our code
+            if (this.timer >= GameScene.UPDATE_MS) {
+
+                // stage then apply the new state
                 let changes: SquareInfo[] = this.stageTick()
                 this.applyTick(changes)
-            }
 
-            // Slow down our update frequency
-            while (this.timer > GameScene.UPDATE_MS) {
-                this.timer -= GameScene.UPDATE_MS
+                // reduce our timer back below our threshold so that we can continue iteration
+                do {
+                    this.timer -= GameScene.UPDATE_MS
+                } while (this.timer >= GameScene.UPDATE_MS)
             }
         }
     }
@@ -117,9 +128,8 @@ export class GameScene extends Phaser.Scene {
     toggleTile(x: number, y: number) {
         let square = this.grid[y][x].square.name == this.blackSquare.name  ? this.purpleSquare : this.blackSquare
         let squareInfo = this.grid[y][x]
-
         squareInfo.square = square
-        squareInfo.state = squareInfo.state == State.ALIVE ? State.DEAD : State.ALIVE
+        squareInfo.state = squareInfo.isAlive() ? State.DEAD : State.ALIVE
         this.worldTexture.draw(square, squareInfo.x, squareInfo.y)
     }
 
@@ -142,19 +152,14 @@ export class GameScene extends Phaser.Scene {
         return neighbors
     }
 
-    // TODO if nothing changed state game over
+    // TODO if nothing changed state (emtpy return arr), game over
     stageTick(): SquareInfo[] {
         let changed: SquareInfo[] = []
-
-        for (let y = 0; y < GameScene.Y_NUM; y++) {
-            for (let x = 0; x < GameScene.X_NUM; x++) {
-                let square = this.grid[y][x]
-                if (square.state != square.getNextState()) {
-                    changed.push(square)
-                }
+        this.grid.forEach(row => row.forEach(square => {
+            if (square.state != square.getNextState()) {
+                changed.push(square)
             }
-        }
-
+        }))
         return changed
     }
 
@@ -180,6 +185,12 @@ class SquareInfo {
     // For convenience and to reduce garbage collection
     public neighbors: SquareInfo[]
 
+    /**
+     * @param x pixel location
+     * @param y pixel location
+     * @param square the brush to paint the RenderTexture with
+     * @param state starting state of the square. Default is State.Dead
+     */
     constructor(x: number, y: number, square: Phaser.GameObjects.Rectangle, state: State = State.DEAD) {
         this.x = x
         this.y = y

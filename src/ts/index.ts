@@ -1,4 +1,4 @@
-import 'phaser'
+import "phaser"
 import {GameScene} from "./game_scene"
 
 const config: Phaser.Types.Core.GameConfig = {
@@ -10,6 +10,5 @@ const config: Phaser.Types.Core.GameConfig = {
 }
 
 let game = new Phaser.Game(config)
-game.scene.add(GameScene.NAME, new GameScene(config))
-game.scene.start(GameScene.NAME, config)
-export = game
+game.scene.add(GameScene.NAME, new GameScene(config), true)
+

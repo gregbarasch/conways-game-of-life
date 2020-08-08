@@ -1,17 +1,26 @@
+import Container = Phaser.GameObjects.Container
+import RenderTexture = Phaser.GameObjects.RenderTexture
+import SettingsConfig = Phaser.Types.Scenes.SettingsConfig
+import Rectangle = Phaser.GameObjects.Rectangle
+
 export class GameScene extends Phaser.Scene {
 
     public static readonly NAME: string = "game_scene"
 
-    private static readonly PURPLE = 0x6600ff
-    private static readonly BLACK = 0x000000
-    private static readonly BLUE = 0x3333ff
+    private static readonly ALIVE_COLOR = 0x6600ff
+    private static readonly DEAD_COLOR = 0x000000
+    private static readonly BORDER_COLOR = 0xf7b100
+
     // grid dimensions
     private static readonly X_NUM = 60
     private static readonly Y_NUM = 60
+    // X axis has empty space on right hand side for buttons
+    private static readonly GRID_X_SCALE = .75
+
     // update loop speed
     private static readonly UPDATE_MS = 500
 
-    private worldTexture: Phaser.GameObjects.RenderTexture
+    private worldTexture: RenderTexture
     private grid: SquareInfo[][]
 
     // enables and disables our game ticks
@@ -19,8 +28,8 @@ export class GameScene extends Phaser.Scene {
     // slow down our update loop by keeping track of time elapsed
     private timer: number
 
-    private purpleSquare: Phaser.GameObjects.Rectangle
-    private blackSquare: Phaser.GameObjects.Rectangle
+    private aliveSquare: Rectangle
+    private deadSquare: Rectangle
     private sqBorderThickness: number
     private sqWidth: number
     private sqHeight: number
@@ -28,7 +37,7 @@ export class GameScene extends Phaser.Scene {
     // TODO fix this later.. click a button rather than press enter
     private enterKey: Phaser.Input.Keyboard.Key
 
-    constructor(config: Phaser.Types.Scenes.SettingsConfig) {
+    constructor(config: SettingsConfig) {
         config.key = GameScene.NAME
         super(config)
         this.grid = []
@@ -37,28 +46,29 @@ export class GameScene extends Phaser.Scene {
     }
 
     preload() {
+        this.load.image("info_on", "img/info_on.png")
+
         this.enterKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER)
 
-        // setup render texture and listen for clicks
-        this.worldTexture = this.add.renderTexture(0, 0, this.cameras.main.width, this.cameras.main.height)
-        this.worldTexture.setInteractive()
-        this.worldTexture.on(Phaser.Input.Events.POINTER_DOWN, function(pointer: Phaser.Input.Pointer) {
-            this.toggleTileByPixel(pointer.worldX, pointer.worldY)
-        }, this)
+        // setup world, place texture in worldContainer
+        this.worldTexture = this.add.renderTexture(0, 0, this.cameras.main.width*GameScene.GRID_X_SCALE, this.cameras.main.height).setInteractive()
+        this.worldTexture.on(Phaser.Input.Events.POINTER_DOWN,
+            (pointer: Phaser.Input.Pointer, x: number, y: number) => this.toggleTileByPixel(x, y), this)
 
-        // thickness based on vertical axis
-        this.sqBorderThickness = Math.ceil(this.cameras.main.height / GameScene.X_NUM / 19)
+        this.sqBorderThickness = 1
         this.sqHeight = this.cameras.main.height / GameScene.Y_NUM
-        this.sqWidth = this.cameras.main.width / GameScene.X_NUM
+        this.sqWidth = (this.cameras.main.width / GameScene.X_NUM) * GameScene.GRID_X_SCALE
 
-        this.purpleSquare = new Phaser.GameObjects.Rectangle(this, 0, 0, this.sqWidth, this.sqHeight)
+        this.aliveSquare = new Rectangle(this, 0, 0, this.sqWidth, this.sqHeight)
             .setName("purple")
-            .setStrokeStyle(this.sqBorderThickness, GameScene.BLUE)
-            .setFillStyle(GameScene.PURPLE)
-        this.blackSquare = new Phaser.GameObjects.Rectangle(this, 0, 0, this.sqWidth, this.sqHeight)
+            .setStrokeStyle(this.sqBorderThickness, GameScene.BORDER_COLOR)
+            .setFillStyle(GameScene.ALIVE_COLOR)
+            .setOrigin(0)
+        this.deadSquare = new Rectangle(this, 0, 0, this.sqWidth, this.sqHeight)
             .setName("black")
-            .setStrokeStyle(this.sqBorderThickness, GameScene.BLUE)
-            .setFillStyle(GameScene.BLACK)
+            .setStrokeStyle(this.sqBorderThickness, GameScene.BORDER_COLOR)
+            .setFillStyle(GameScene.DEAD_COLOR)
+            .setOrigin(0)
 
         // Creates initial board state
         for (let y = 0; y < GameScene.Y_NUM; y++) {
@@ -66,8 +76,8 @@ export class GameScene extends Phaser.Scene {
             for (let x = 0; x < GameScene.X_NUM; x++) {
                 let xPixel = this.xPixelFromTile(x)
                 let yPixel = this.yPixelFromTile(y)
-                this.worldTexture.draw(this.blackSquare, xPixel, yPixel)
-                this.grid[y][x] = new SquareInfo(xPixel, yPixel, this.blackSquare)
+                this.worldTexture.draw(this.deadSquare, xPixel, yPixel)
+                this.grid[y][x] = new SquareInfo(xPixel, yPixel, this.deadSquare)
             }
         }
 
@@ -104,11 +114,11 @@ export class GameScene extends Phaser.Scene {
     }
 
     xPixelFromTile(x: number): number {
-        return this.sqWidth*x + this.sqWidth/2
+        return this.sqWidth*x
     }
 
     yPixelFromTile(y: number): number {
-        return this.sqHeight*y + this.sqHeight/2
+        return this.sqHeight*y
     }
 
     xTileFromPixel(xPixel: number): number {
@@ -126,7 +136,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     toggleTile(x: number, y: number) {
-        let square = this.grid[y][x].square.name == this.blackSquare.name  ? this.purpleSquare : this.blackSquare
+        let square = this.grid[y][x].square.name == this.deadSquare.name  ? this.aliveSquare : this.deadSquare
         let squareInfo = this.grid[y][x]
         squareInfo.square = square
         squareInfo.state = squareInfo.isAlive() ? State.DEAD : State.ALIVE
@@ -180,7 +190,7 @@ class SquareInfo {
     // These should be pixel origin locations, not tile numbers
     public readonly x: number
     public readonly y: number
-    public square: Phaser.GameObjects.Rectangle
+    public square: Rectangle
     public state: State
     // For convenience and to reduce garbage collection
     public neighbors: SquareInfo[]
@@ -191,7 +201,7 @@ class SquareInfo {
      * @param square the brush to paint the RenderTexture with
      * @param state starting state of the square. Default is State.Dead
      */
-    constructor(x: number, y: number, square: Phaser.GameObjects.Rectangle, state: State = State.DEAD) {
+    constructor(x: number, y: number, square: Rectangle, state: State = State.DEAD) {
         this.x = x
         this.y = y
         this.square = square

@@ -5,7 +5,8 @@ const webpack = require('webpack')
 
 /*
 TODO
-UglifyJs plugin to minify your code
+UglifyJs plugin to minify my code
+probably not necessary to swap
 */
 
 module.exports = {
@@ -26,7 +27,7 @@ module.exports = {
         path: path.resolve(__dirname, 'dist'),
     },
     resolve: {
-        extensions: [ '.tsx', '.ts', '.js', '.png'],
+        extensions: [ '.tsx', '.ts', '.js' ],
     },
     devServer: {
         contentBase: path.join(__dirname, 'dist'),
@@ -46,6 +47,11 @@ module.exports = {
                     context: path.resolve(__dirname, 'src'),
                     to: path.resolve(__dirname, 'dist')
                 },
+                {
+                    from: path.resolve(__dirname, 'src/snd/**/*'),
+                    context: path.resolve(__dirname, 'src'),
+                    to: path.resolve(__dirname, 'dist')
+                },
             ]
         }),
         new webpack.DefinePlugin({
@@ -54,7 +60,7 @@ module.exports = {
         }),
     ],
 
-    // FIXME not working it seems
+    // FIXME not working as i expected it seems
     optimization: {
         splitChunks: {
             cacheGroups: {

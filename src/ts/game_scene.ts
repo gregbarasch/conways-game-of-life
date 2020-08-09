@@ -1,7 +1,9 @@
-import Container = Phaser.GameObjects.Container
+import "./phaser_extensions"
+
 import RenderTexture = Phaser.GameObjects.RenderTexture
 import SettingsConfig = Phaser.Types.Scenes.SettingsConfig
 import Rectangle = Phaser.GameObjects.Rectangle
+import BaseSound = Phaser.Sound.BaseSound;
 
 export class GameScene extends Phaser.Scene {
 
@@ -9,19 +11,20 @@ export class GameScene extends Phaser.Scene {
 
     private static readonly ALIVE_COLOR = 0x6600ff
     private static readonly DEAD_COLOR = 0x000000
-    private static readonly BORDER_COLOR = 0xf7b100
+    private static readonly BORDER_COLOR = 0x2757C1
 
     // grid dimensions
     private static readonly X_NUM = 60
     private static readonly Y_NUM = 60
     // X axis has empty space on right hand side for buttons
-    private static readonly GRID_X_SCALE = .75
+    private static readonly GRID_X_SCALE = .90
 
     // update loop speed
     private static readonly UPDATE_MS = 500
 
     private worldTexture: RenderTexture
     private grid: SquareInfo[][]
+    private blipSound: BaseSound
 
     // enables and disables our game ticks
     private running: boolean
@@ -34,9 +37,6 @@ export class GameScene extends Phaser.Scene {
     private sqWidth: number
     private sqHeight: number
 
-    // TODO fix this later.. click a button rather than press enter
-    private enterKey: Phaser.Input.Keyboard.Key
-
     constructor(config: SettingsConfig) {
         config.key = GameScene.NAME
         super(config)
@@ -46,54 +46,74 @@ export class GameScene extends Phaser.Scene {
     }
 
     preload() {
-        this.load.image("info_on", "img/info_on.png")
+        this.load.multiatlas('buttons', 'img/buttons.json', 'img')
+        this.load.audio('blip', 'snd/blip.wav', {instances: 1});
 
-        this.enterKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER)
-
-        // setup world, place texture in worldContainer
-        this.worldTexture = this.add.renderTexture(0, 0, this.cameras.main.width*GameScene.GRID_X_SCALE, this.cameras.main.height).setInteractive()
+        // setup world
+        this.worldTexture = this.add.renderTexture(0, 0, this.cameras.main.width*GameScene.GRID_X_SCALE, this.cameras.main.height)
+            .setOrigin(0)
+            .setInteractive()
         this.worldTexture.on(Phaser.Input.Events.POINTER_DOWN,
             (pointer: Phaser.Input.Pointer, x: number, y: number) => this.toggleTileByPixel(x, y), this)
 
+        // setup square sizes
         this.sqBorderThickness = 1
         this.sqHeight = this.cameras.main.height / GameScene.Y_NUM
         this.sqWidth = (this.cameras.main.width / GameScene.X_NUM) * GameScene.GRID_X_SCALE
 
+        // setup square paint brushes
         this.aliveSquare = new Rectangle(this, 0, 0, this.sqWidth, this.sqHeight)
-            .setName("purple")
+            .setName(State[State.ALIVE])
             .setStrokeStyle(this.sqBorderThickness, GameScene.BORDER_COLOR)
             .setFillStyle(GameScene.ALIVE_COLOR)
             .setOrigin(0)
         this.deadSquare = new Rectangle(this, 0, 0, this.sqWidth, this.sqHeight)
-            .setName("black")
+            .setName(State[State.DEAD])
             .setStrokeStyle(this.sqBorderThickness, GameScene.BORDER_COLOR)
             .setFillStyle(GameScene.DEAD_COLOR)
             .setOrigin(0)
 
-        // Creates initial board state
-        for (let y = 0; y < GameScene.Y_NUM; y++) {
-            this.grid[y] = []
-            for (let x = 0; x < GameScene.X_NUM; x++) {
-                let xPixel = this.xPixelFromTile(x)
-                let yPixel = this.yPixelFromTile(y)
-                this.worldTexture.draw(this.deadSquare, xPixel, yPixel)
-                this.grid[y][x] = new SquareInfo(xPixel, yPixel, this.deadSquare)
-            }
-        }
+        this.reset()
+    }
 
-        // One more loop to set neighbors (dependent on SquareInfo instantiation)
-        for (let y = 0; y < GameScene.Y_NUM; y++) {
-            for (let x = 0; x < GameScene.X_NUM; x++) {
-                this.grid[y][x].neighbors = this.getNeighbors(x, y)
-            }
-        }
+    create() {
+        this.blipSound = this.sound.add("blip")
+
+        this.addButton(
+            this.cameras.main.width*GameScene.GRID_X_SCALE,
+            0,
+            ()=>this.running = true,
+            this,
+            "buttons", "play.png", "play_active.png", "play_active.png",
+            this.cameras.main.width*(1-GameScene.GRID_X_SCALE)
+        )
+        this.addButton(
+            this.cameras.main.width*GameScene.GRID_X_SCALE,
+            this.cameras.main.width*(1-GameScene.GRID_X_SCALE),
+            ()=>this.running = false,
+            this,
+            "buttons", "pause.png", "pause_active.png", "pause_active.png",
+            this.cameras.main.width*(1-GameScene.GRID_X_SCALE)
+        )
+        this.addButton(
+            this.cameras.main.width*GameScene.GRID_X_SCALE,
+            this.cameras.main.width*(1-GameScene.GRID_X_SCALE)*2,
+            ()=>this.reset(),
+            this,
+            "buttons", "replay.png", "replay_active.png", "replay_active.png",
+            this.cameras.main.width*(1-GameScene.GRID_X_SCALE)
+        )
+        this.addButton(
+            this.cameras.main.width*GameScene.GRID_X_SCALE,
+            this.cameras.main.width*(1-GameScene.GRID_X_SCALE)*3,
+            ()=>{},
+            this,
+            "buttons", "info.png", "info_active.png", "info_active.png",
+            this.cameras.main.width*(1-GameScene.GRID_X_SCALE)
+        )
     }
 
     update(time: number, delta: number) {
-        if (Phaser.Input.Keyboard.JustDown(this.enterKey)) {
-            this.running = !this.running
-        }
-
         if (this.running) {
             // keep track of time elapsed between update(...) calls via this.timer
             this.timer += delta
@@ -104,6 +124,7 @@ export class GameScene extends Phaser.Scene {
                 // stage then apply the new state
                 let changes: SquareInfo[] = this.stageTick()
                 this.applyTick(changes)
+                this.blipSound.play()
 
                 // reduce our timer back below our threshold so that we can continue iteration
                 do {
@@ -114,11 +135,11 @@ export class GameScene extends Phaser.Scene {
     }
 
     xPixelFromTile(x: number): number {
-        return this.sqWidth*x
+        return Math.ceil(this.sqWidth*x)
     }
 
     yPixelFromTile(y: number): number {
-        return this.sqHeight*y
+        return Math.ceil(this.sqHeight*y)
     }
 
     xTileFromPixel(xPixel: number): number {
@@ -177,6 +198,28 @@ export class GameScene extends Phaser.Scene {
         changes.forEach(square => {
             this.toggleTileByPixel(square.x, square.y)
         })
+    }
+
+    reset() {
+        this.running = false
+
+        // create initial board state
+        for (let y = 0; y < GameScene.Y_NUM; y++) {
+            this.grid[y] = []
+            for (let x = 0; x < GameScene.X_NUM; x++) {
+                let xPixel = this.xPixelFromTile(x)
+                let yPixel = this.yPixelFromTile(y)
+                this.worldTexture.draw(this.deadSquare, xPixel, yPixel)
+                this.grid[y][x] = new SquareInfo(xPixel, yPixel, this.deadSquare)
+            }
+        }
+
+        // One more loop to set neighbors (dependent on SquareInfo instantiation)
+        for (let y = 0; y < GameScene.Y_NUM; y++) {
+            for (let x = 0; x < GameScene.X_NUM; x++) {
+                this.grid[y][x].neighbors = this.getNeighbors(x, y)
+            }
+        }
     }
 }
 

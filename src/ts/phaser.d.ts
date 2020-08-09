@@ -7,10 +7,11 @@ declare module "phaser" {
             y: number,
             callback: any,
             callbackContext: Phaser.Scene,
-            spritesheet: string,
+            texture: string,
             outFrame: string | integer,
             overFrame: string | integer,
             downFrame: string | integer,
+            size?: number,
         ): Phaser.GameObjects.Sprite
     }
 }

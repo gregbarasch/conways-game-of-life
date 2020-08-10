@@ -214,7 +214,7 @@ export class GameScene extends Phaser.Scene {
             square = this.aliveSquare
         }
 
-        this.worldTexture.draw(square, squareInfo.x, squareInfo.y)
+        this.worldTexture.draw(square, squareInfo.xPixel, squareInfo.yPixel)
     }
 
     private getNeighbors(x: number, y: number): SquareInfo[] {
@@ -248,7 +248,7 @@ export class GameScene extends Phaser.Scene {
 
     private applyTick(changes: SquareInfo[]): void {
         changes.forEach(square => {
-            this.toggleTileByPixel(square.x, square.y)
+            this.toggleTileByPixel(square.xPixel, square.yPixel)
         })
     }
 
@@ -256,9 +256,7 @@ export class GameScene extends Phaser.Scene {
         this.grid.forEach(row => row.forEach(square => {
             if (square.isAlive()) {
                 square.state = State.DEAD
-                let xPixel = this.xPixelFromTile(square.x)
-                let yPixel = this.yPixelFromTile(square.y)
-                this.worldTexture.draw(this.deadSquare, xPixel, yPixel)
+                this.worldTexture.draw(this.deadSquare, square.xPixel, square.yPixel)
             }
         }))
     }
@@ -271,21 +269,15 @@ enum State {
 
 class SquareInfo {
 
-    // These should be pixel origin locations, not tile numbers
-    public readonly x: number
-    public readonly y: number
+    public readonly xPixel: number
+    public readonly yPixel: number
     public state: State
     // For convenience and to reduce garbage collection
     public neighbors: SquareInfo[]
 
-    /**
-     * @param x pixel location
-     * @param y pixel location
-     * @param state starting state of the square. Default is State.Dead
-     */
-    public constructor(x: number, y: number, state: State = State.DEAD) {
-        this.x = x
-        this.y = y
+    public constructor(xPixel: number, yPixel: number, state: State = State.DEAD) {
+        this.xPixel = xPixel
+        this.yPixel = yPixel
         this.state = state
     }
 
@@ -293,6 +285,7 @@ class SquareInfo {
         return this.state == State.ALIVE
     }
 
+    // Dependent on neighbors var
     public getNextState(): State {
         let numLiveNeighbors = this.neighbors
             .filter(neighbor => neighbor.isAlive())

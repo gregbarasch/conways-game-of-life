@@ -6,12 +6,13 @@ declare module "phaser" {
             x: number,
             y: number,
             callback: any,
-            callbackContext: Phaser.Scene,
+            callbackContext: any,
             texture: string,
             outFrame: string | integer,
             overFrame: string | integer,
             downFrame: string | integer,
-            size?: number,
+            width?: number,
+            height?: number,
         ): Phaser.GameObjects.Sprite
     }
 }

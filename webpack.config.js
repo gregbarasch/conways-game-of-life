@@ -48,6 +48,11 @@ module.exports = {
                     to: path.resolve(__dirname, 'dist')
                 },
                 {
+                    from: path.resolve(__dirname, 'src/font/**/*'),
+                    context: path.resolve(__dirname, 'src'),
+                    to: path.resolve(__dirname, 'dist')
+                },
+                {
                     from: path.resolve(__dirname, 'src/snd/**/*'),
                     context: path.resolve(__dirname, 'src'),
                     to: path.resolve(__dirname, 'dist')

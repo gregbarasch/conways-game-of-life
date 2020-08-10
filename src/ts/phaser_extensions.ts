@@ -2,24 +2,21 @@ Phaser.Scene.prototype.addButton = function(
     x: number,
     y: number,
     callback: any,
-    callbackContext: Phaser.Scene,
+    callbackContext: any,
     texture: string,
     outFrame: string | integer,
     overFrame: string | integer,
     downFrame: string | integer,
-    size?: number,
+    width?: number,
+    height?: number,
 ): Phaser.GameObjects.Sprite {
 
     let btn = this.add.sprite(x, y, texture, outFrame)
         .setOrigin(0)
         .setInteractive();
 
-    let myWidth = btn.width
-    let myHeight = btn.height
-    if (size != undefined) {
-        myWidth = size
-        myHeight = size
-    }
+    let myWidth = width != null ? width : btn.width
+    let myHeight = height != null ? height : btn.height
     btn.setSize(myWidth, myHeight)
     btn.setDisplaySize(myWidth, myHeight)
 

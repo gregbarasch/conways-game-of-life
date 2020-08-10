@@ -119,7 +119,9 @@ export class GameScene extends Phaser.Scene {
             ()=> {
                 this.running = true
                 this.playButton.setVisible(false)
+                this.playButton.disableInteractive()
                 this.pauseButton.setVisible(true)
+                this.pauseButton.setInteractive()
             }, this,
             "buttons", "play", "play_active", "play_active",
             buttonSize, buttonSize)
@@ -129,7 +131,9 @@ export class GameScene extends Phaser.Scene {
             ()=> {
                 this.running = false
                 this.playButton.setVisible(true)
+                this.playButton.setInteractive()
                 this.pauseButton.setVisible(false)
+                this.pauseButton.disableInteractive()
             }, this,
             "buttons", "pause", "pause_active", "pause_active",
             buttonSize, buttonSize
@@ -140,7 +144,9 @@ export class GameScene extends Phaser.Scene {
             ()=> {
                 this.running = false
                 this.playButton.setVisible(true)
+                this.playButton.setInteractive()
                 this.pauseButton.setVisible(false)
+                this.pauseButton.disableInteractive()
                 this.resetGrid()
             }, this,
             "buttons", "replay", "replay_active", "replay_active",

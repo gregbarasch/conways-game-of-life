@@ -23,22 +23,26 @@ Phaser.Scene.prototype.addButton = function(
     btn.on(Phaser.Input.Events.GAMEOBJECT_POINTER_OVER, function() {
         this.setDisplaySize(myWidth, myHeight)
         this.setFrame(overFrame)
+        return this
     })
 
     btn.on(Phaser.Input.Events.GAMEOBJECT_POINTER_OUT,  function() {
         this.setDisplaySize(myWidth, myHeight)
         this.setFrame(outFrame)
+        return this
     })
 
-    btn.on(Phaser.Input.Events.GAMEOBJECT_POINTER_DOWN, function() {
+    btn.on('pointerdown', function() {
         this.setDisplaySize(myWidth*.8, myHeight*.8)
         this.setFrame(downFrame)
+        return this
     })
 
-    btn.on(Phaser.Input.Events.GAMEOBJECT_POINTER_UP, function() {
+    btn.on('pointerup', function() {
         this.setDisplaySize(myWidth, myHeight)
         this.setFrame(overFrame)
         callback.bind(callbackContext).call()
+        return this
     })
 
     return btn

@@ -10,7 +10,12 @@ Enjoy
 
 <br>
 
-#### To Run
+#### To Play
+[Click Here](https://illdursa.itch.io/conways-game-of-life)
+
+<br>
+
+#### To Run Locally
 - Install npm
 - From the root directory, run `npm install`
 - Next run `npm run build`

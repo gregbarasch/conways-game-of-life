@@ -1,4 +1,4 @@
-import {GameScene} from "./game_scene";
+import {GameScene} from "./game_scene"
 
 export class TitleScene extends Phaser.Scene {
 
@@ -14,9 +14,9 @@ export class TitleScene extends Phaser.Scene {
 
         // hijacking title screen to work as bootloader for other assets
         this.load.multiatlas('buttons', 'img/buttons.json', 'img')
-        this.load.audio('music', 'snd/crazy_games__wake_up.mp3', {instances: 1});
+        this.load.audio('music', 'snd/crazy_games__wake_up.mp3', {instances: 1})
         this.load.image('window', 'img/window.png')
-        this.load.bitmapFont('arcade', 'font/arcade.png', 'font/arcade.xml');
+        this.load.bitmapFont('arcade', 'font/arcade.png', 'font/arcade.xml')
     }
 
     public create(): void {

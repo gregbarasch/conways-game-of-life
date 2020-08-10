@@ -1,10 +1,10 @@
 import "./phaser_extensions"
-import InfoContainer from "./info_container";
+import InfoContainer from "./info_container"
 
 import RenderTexture = Phaser.GameObjects.RenderTexture
 import Rectangle = Phaser.GameObjects.Rectangle
 import BaseSound = Phaser.Sound.BaseSound
-import Sprite = Phaser.GameObjects.Sprite;
+import Sprite = Phaser.GameObjects.Sprite
 
 export class GameScene extends Phaser.Scene {
 
@@ -220,10 +220,10 @@ export class GameScene extends Phaser.Scene {
     private getNeighbors(x: number, y: number): SquareInfo[] {
         let neighbors: SquareInfo[] = []
 
-        let startX = (x-1 < 0) ? x : x-1;
-        let startY = (y-1 < 0) ? y : y-1;
-        let endX   = (x+1 >= GameScene.X_NUM) ? x : x+1;
-        let endY   = (y+1 >= GameScene.Y_NUM) ? y : y+1;
+        let startX = (x-1 < 0) ? x : x-1
+        let startY = (y-1 < 0) ? y : y-1
+        let endX   = (x+1 >= GameScene.X_NUM) ? x : x+1
+        let endY   = (y+1 >= GameScene.Y_NUM) ? y : y+1
 
         for (let row=startY; row<=endY; row++) {
             for (let col=startX; col<=endX; col++) {

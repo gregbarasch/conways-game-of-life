@@ -1,6 +1,6 @@
 import "phaser"
 import {GameScene} from "./game_scene"
-import {TitleScene} from "./title_scene";
+import {TitleScene} from "./title_scene"
 
 const config: Phaser.Types.Core.GameConfig = {
     type: Phaser.AUTO,

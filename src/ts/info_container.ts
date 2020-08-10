@@ -5,7 +5,7 @@ import "./phaser_extensions"
  */
 export default class InfoContainer extends Phaser.GameObjects.Container {
 
-    constructor(scene: Phaser.Scene, x?: number, y?: number, width?: number, height?: number) {
+    public constructor(scene: Phaser.Scene, x?: number, y?: number, width?: number, height?: number) {
         super(scene, x, y)
 
         let myWidth = width != undefined ? width : this.scene.game.canvas.width/2

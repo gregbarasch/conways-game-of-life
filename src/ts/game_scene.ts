@@ -1,11 +1,9 @@
 import "./phaser_extensions"
+import InfoContainer from "./info_container";
 
 import RenderTexture = Phaser.GameObjects.RenderTexture
-import SettingsConfig = Phaser.Types.Scenes.SettingsConfig
 import Rectangle = Phaser.GameObjects.Rectangle
 import BaseSound = Phaser.Sound.BaseSound
-import InfoContainer from "./info_container";
-import {Game} from "phaser";
 import Sprite = Phaser.GameObjects.Sprite;
 
 export class GameScene extends Phaser.Scene {
@@ -46,24 +44,25 @@ export class GameScene extends Phaser.Scene {
     private gridWidth: number
     private gridHeight: number
 
-    constructor() {
+    public constructor() {
         super(GameScene.NAME)
     }
 
-    preload() {
+    public preload(): void {
         // setup sizes
+        // Some small adjustments for strange rendering issues
         this.sqBorderThickness = 1
         this.gridHeight = this.game.canvas.height
-        this.gridWidth = Math.floor(this.game.canvas.width * GameScene.GRID_X_SCALE)
-        this.sqHeight = this.gridHeight / GameScene.Y_NUM
-        this.sqWidth = this.gridWidth / GameScene.X_NUM
+        this.gridWidth = this.game.canvas.width * GameScene.GRID_X_SCALE
+        this.sqHeight = (this.game.canvas.height-2) / GameScene.Y_NUM
+        this.sqWidth = (this.game.canvas.width-2) * GameScene.GRID_X_SCALE / GameScene.X_NUM
 
         // setup world
         this.worldTexture = this.add.renderTexture(0, 0, this.gridWidth, this.gridHeight)
             .setOrigin(0)
             .setInteractive()
-        this.worldTexture.on(Phaser.Input.Events.POINTER_DOWN,
-            (pointer: Phaser.Input.Pointer, x: number, y: number) => this.toggleTileByPixel(x, y), this)
+            .on(Phaser.Input.Events.POINTER_DOWN,
+                (pointer: Phaser.Input.Pointer, x: number, y: number) => this.toggleTileByPixel(x, y), this)
 
         // setup square paint brushes
         this.aliveSquare = new Rectangle(this, 0, 0, this.sqWidth, this.sqHeight)
@@ -78,11 +77,27 @@ export class GameScene extends Phaser.Scene {
             .setOrigin(0)
 
         // new game
-        this.resetGrid()
+        // create initial board state
+        for (let y = 0; y < GameScene.Y_NUM; y++) {
+            this.grid[y] = []
+            for (let x = 0; x < GameScene.X_NUM; x++) {
+                let xPixel = this.xPixelFromTile(x)
+                let yPixel = this.yPixelFromTile(y)
+                this.worldTexture.draw(this.deadSquare, xPixel, yPixel)
+                this.grid[y][x] = new SquareInfo(xPixel, yPixel)
+            }
+        }
+
+        // One more loop to set neighbors (dependent on SquareInfo instantiation)
+        for (let y = 0; y < GameScene.Y_NUM; y++) {
+            for (let x = 0; x < GameScene.X_NUM; x++) {
+                this.grid[y][x].neighbors = this.getNeighbors(x, y)
+            }
+        }
     }
 
-    create() {
-        this.music = this.sound.add('music', {loop: true})
+    public create(): void {
+        this.music = this.sound.add('music', { loop: true })
         this.music.play()
 
         // Add my info popup window
@@ -144,7 +159,7 @@ export class GameScene extends Phaser.Scene {
             buttonSize, buttonSize)
     }
 
-    update(time: number, delta: number) {
+    public update(time: number, delta: number): void {
         if (this.running) {
             // keep track of time elapsed between update(...) calls via this.timer
             this.timer += delta
@@ -164,29 +179,30 @@ export class GameScene extends Phaser.Scene {
         }
     }
 
-    xPixelFromTile(x: number): number {
-        return Math.ceil(this.sqWidth*x)
+    // This might need to be fixed in the future, but +1 was for seemingly off by 1 error in rendering
+    private xPixelFromTile(x: number): number {
+        return (this.sqWidth*x)+1
     }
 
-    yPixelFromTile(y: number): number {
-        return Math.ceil(this.sqHeight*y)
+    private yPixelFromTile(y: number): number {
+        return (this.sqHeight*y)+1
     }
 
-    xTileFromPixel(xPixel: number): number {
+    private xTileFromPixel(xPixel: number): number {
         return Math.floor(xPixel/this.sqWidth)
     }
 
-    yTileFromPixel(yPixel: number): number {
+    private yTileFromPixel(yPixel: number): number {
         return Math.floor(yPixel/this.sqHeight)
     }
 
-    toggleTileByPixel(xPixel: number, yPixel: number) {
+    private toggleTileByPixel(xPixel: number, yPixel: number): void {
         let x = this.xTileFromPixel(xPixel)
         let y = this.yTileFromPixel(yPixel)
         this.toggleTile(x, y)
     }
 
-    toggleTile(x: number, y: number) {
+    private toggleTile(x: number, y: number): void {
         let squareInfo = this.grid[y][x]
 
         let square
@@ -201,7 +217,7 @@ export class GameScene extends Phaser.Scene {
         this.worldTexture.draw(square, squareInfo.x, squareInfo.y)
     }
 
-    getNeighbors(x: number, y: number): SquareInfo[] {
+    private getNeighbors(x: number, y: number): SquareInfo[] {
         let neighbors: SquareInfo[] = []
 
         let startX = (x-1 < 0) ? x : x-1;
@@ -220,7 +236,7 @@ export class GameScene extends Phaser.Scene {
         return neighbors
     }
 
-    stageTick(): SquareInfo[] {
+    private stageTick(): SquareInfo[] {
         let changed: SquareInfo[] = []
         this.grid.forEach(row => row.forEach(square => {
             if (square.state != square.getNextState()) {
@@ -230,30 +246,21 @@ export class GameScene extends Phaser.Scene {
         return changed
     }
 
-    applyTick(changes: SquareInfo[]) {
+    private applyTick(changes: SquareInfo[]): void {
         changes.forEach(square => {
             this.toggleTileByPixel(square.x, square.y)
         })
     }
 
-    resetGrid() {
-        // create initial board state
-        for (let y = 0; y < GameScene.Y_NUM; y++) {
-            this.grid[y] = []
-            for (let x = 0; x < GameScene.X_NUM; x++) {
-                let xPixel = this.xPixelFromTile(x)
-                let yPixel = this.yPixelFromTile(y)
+    private resetGrid(): void {
+        this.grid.forEach(row => row.forEach(square => {
+            if (square.isAlive()) {
+                square.state = State.DEAD
+                let xPixel = this.xPixelFromTile(square.x)
+                let yPixel = this.yPixelFromTile(square.y)
                 this.worldTexture.draw(this.deadSquare, xPixel, yPixel)
-                this.grid[y][x] = new SquareInfo(xPixel, yPixel)
             }
-        }
-
-        // One more loop to set neighbors (dependent on SquareInfo instantiation)
-        for (let y = 0; y < GameScene.Y_NUM; y++) {
-            for (let x = 0; x < GameScene.X_NUM; x++) {
-                this.grid[y][x].neighbors = this.getNeighbors(x, y)
-            }
-        }
+        }))
     }
 }
 
@@ -276,17 +283,17 @@ class SquareInfo {
      * @param y pixel location
      * @param state starting state of the square. Default is State.Dead
      */
-    constructor(x: number, y: number, state: State = State.DEAD) {
+    public constructor(x: number, y: number, state: State = State.DEAD) {
         this.x = x
         this.y = y
         this.state = state
     }
 
-    isAlive(): boolean {
+    public isAlive(): boolean {
         return this.state == State.ALIVE
     }
 
-    getNextState(): State {
+    public getNextState(): State {
         let numLiveNeighbors = this.neighbors
             .filter(neighbor => neighbor.isAlive())
             .length

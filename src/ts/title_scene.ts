@@ -4,11 +4,11 @@ export class TitleScene extends Phaser.Scene {
 
     public static readonly NAME: string = "title_scene"
 
-    constructor() {
+    public constructor() {
         super(TitleScene.NAME)
     }
 
-    preload() {
+    public preload(): void {
         this.load.image('title_screen', 'img/title_screen.png')
         this.load.audio('coin', 'snd/coin_grab.wav')
 
@@ -19,7 +19,7 @@ export class TitleScene extends Phaser.Scene {
         this.load.bitmapFont('arcade', 'font/arcade.png', 'font/arcade.xml');
     }
 
-    create() {
+    public create(): void {
         let coinSound = this.sound.add('coin')
 
         this.cameras.main.fadeIn(4000)

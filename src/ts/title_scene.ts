@@ -1,13 +1,11 @@
-import SettingsConfig = Phaser.Types.Scenes.SettingsConfig;
 import {GameScene} from "./game_scene";
 
 export class TitleScene extends Phaser.Scene {
 
     public static readonly NAME: string = "title_scene"
 
-    constructor(config: SettingsConfig) {
-        config.key = TitleScene.NAME
-        super(config)
+    constructor() {
+        super(TitleScene.NAME)
     }
 
     preload() {

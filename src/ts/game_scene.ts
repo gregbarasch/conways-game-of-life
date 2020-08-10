@@ -6,6 +6,7 @@ import Rectangle = Phaser.GameObjects.Rectangle
 import BaseSound = Phaser.Sound.BaseSound
 import InfoContainer from "./info_container";
 import {Game} from "phaser";
+import Sprite = Phaser.GameObjects.Sprite;
 
 export class GameScene extends Phaser.Scene {
 
@@ -29,6 +30,8 @@ export class GameScene extends Phaser.Scene {
     private grid: SquareInfo[][] = []
     private infoContainer: InfoContainer
     private music: BaseSound
+    private playButton: Sprite
+    private pauseButton: Sprite
 
     // enables and disables our game ticks
     private running: boolean = false
@@ -75,7 +78,7 @@ export class GameScene extends Phaser.Scene {
             .setOrigin(0)
 
         // new game
-        this.reset()
+        this.resetGrid()
     }
 
     create() {
@@ -85,8 +88,8 @@ export class GameScene extends Phaser.Scene {
         // Add my info popup window
         this.infoContainer = new InfoContainer(
             this,
-            this.gridWidth/4,
-            this.gridHeight/4,
+            this.gridWidth/2,
+            this.gridHeight/2,
             this.gridWidth/2,
             this.gridHeight/2
         )
@@ -95,36 +98,50 @@ export class GameScene extends Phaser.Scene {
         // Add my UI buttons
         let x = this.gridWidth
         let buttonSize = this.game.canvas.width - this.gridWidth
-        this.addButton(
+
+        this.playButton = this.addButton(
             x, 0,
-            ()=>this.running = true, this,
+            ()=> {
+                this.running = true
+                this.playButton.setVisible(false)
+                this.pauseButton.setVisible(true)
+            }, this,
             "buttons", "play", "play_active", "play_active",
-            buttonSize, buttonSize
-        )
-        this.addButton(
-            x, buttonSize,
-            ()=>this.running = false, this,
+            buttonSize, buttonSize)
+
+        this.pauseButton = this.addButton(
+            x, 0,
+            ()=> {
+                this.running = false
+                this.playButton.setVisible(true)
+                this.pauseButton.setVisible(false)
+            }, this,
             "buttons", "pause", "pause_active", "pause_active",
             buttonSize, buttonSize
-        )
+        ).setVisible(false)
+
         this.addButton(
-            x, buttonSize*2,
-            ()=>this.reset(), this,
+            x, buttonSize,
+            ()=> {
+                this.running = false
+                this.playButton.setVisible(true)
+                this.pauseButton.setVisible(false)
+                this.resetGrid()
+            }, this,
             "buttons", "replay", "replay_active", "replay_active",
-            buttonSize, buttonSize
-        )
+            buttonSize, buttonSize)
+
         this.addButton(
             x, this.gridHeight-buttonSize*2,
             ()=>this.infoContainer.setVisible(!this.infoContainer.visible), this,
             "buttons", "info", "info_active", "info_active",
-            buttonSize, buttonSize
-        )
+            buttonSize, buttonSize)
+
         this.addButton(
             x, this.gridHeight-buttonSize,
             ()=> this.game.sound.mute = !this.game.sound.mute, this,
             "buttons", "sound", "sound_active", "sound_active",
-            buttonSize, buttonSize
-        )
+            buttonSize, buttonSize)
     }
 
     update(time: number, delta: number) {
@@ -203,7 +220,6 @@ export class GameScene extends Phaser.Scene {
         return neighbors
     }
 
-    // TODO if nothing changed state (emtpy return arr), game over
     stageTick(): SquareInfo[] {
         let changed: SquareInfo[] = []
         this.grid.forEach(row => row.forEach(square => {
@@ -220,9 +236,7 @@ export class GameScene extends Phaser.Scene {
         })
     }
 
-    reset() {
-        this.running = false
-
+    resetGrid() {
         // create initial board state
         for (let y = 0; y < GameScene.Y_NUM; y++) {
             this.grid[y] = []

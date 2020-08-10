@@ -10,18 +10,19 @@ export default class InfoContainer extends Phaser.GameObjects.Container {
 
         let myWidth = width != undefined ? width : this.scene.game.canvas.width/2
         let myHeight = height != undefined ? height : this.scene.game.canvas.height/2
+        let xOffset = myWidth/2
+        let yOffset = myHeight/2
 
         let window = this.scene.add.image(0,0, 'window')
             .setSize(myWidth, myHeight)
             .setDisplaySize(myWidth, myHeight)
-            .setOrigin(0)
 
+        let xButtonSize = 50
         let xButton = this.scene.addButton(
-            window.width-50, 0,
+            xOffset-xButtonSize, 0 - yOffset,
             ()=>this.setVisible(false), this,
             "buttons", "close", "close_active", "close_active",
-            50, 50)
-            .setOrigin(0)
+            xButtonSize, xButtonSize)
 
         let textAStr = "" +
             "Click the tiles and create a pattern\n\n" +
@@ -32,22 +33,19 @@ export default class InfoContainer extends Phaser.GameObjects.Container {
             "\t2. Any dead cell with three live neighbors becomes a live cell\n\n" +
             "\t3. All other live cells die. Similarly, all other dead cells stay dead"
 
-        let textA = this.scene.add.bitmapText(30, 100, 'arcade', textAStr, 15)
-            .setOrigin(0)
-        let textB = this.scene.add.bitmapText(30, 200, 'arcade', textBStr, 8)
-            .setOrigin(0)
+        let textA = this.scene.add.bitmapText(30 - xOffset, 100 - yOffset, 'arcade', textAStr, 14)
+        let textB = this.scene.add.bitmapText(30 - xOffset, 200 - yOffset, 'arcade', textBStr, 8)
 
-        this.setVisible(false)
+        this.add([window, xButton, textA, textB])
             .setSize(window.width, window.height)
             .setDisplaySize(window.width, window.height)
-            .setInteractive({ draggable: true })
-            .add([window, xButton, textA, textB])
+            .setVisible(false)
+            .setInteractive()
 
-        // FIXME doesn't work very well.. Phaser bug?
         this.scene.input.setDraggable(this)
-        this.on(Phaser.Input.Events.GAMEOBJECT_DRAG, function(pointer: Phaser.Input.Pointer, dragX: number, dragY: number) {
-            this.x = dragX;
-            this.y = dragY;
-        })
+        this.on(Phaser.Input.Events.GAMEOBJECT_DRAG, function(pointer: Phaser.Input.Pointer, dragX: number, dragY: number): any {
+            this.x = dragX
+            this.y = dragY
+        }, this)
     }
 }

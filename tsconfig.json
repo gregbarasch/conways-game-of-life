@@ -1,8 +1,7 @@
 {
   "compilerOptions": {
     "target": "es5",
-    "sourceMap": true,
-    "outDir": "./dist/"
+    "moduleResolution": "node",
   },
   "include": [
     "src/**/*.ts"

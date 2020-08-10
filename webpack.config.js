@@ -4,7 +4,9 @@ const TerserPlugin = require('terser-webpack-plugin')
 const webpack = require('webpack')
 
 module.exports = {
+
     devtool: false,
+
     module: {
         rules: [
             {
@@ -13,22 +15,25 @@ module.exports = {
             },
         ]
     },
+
     entry: './src/ts/index.ts',
+
     output: {
         filename: 'main.js',
-        // TODO fix or remove
-        // chunkFilename: '[name].[chunkhash].js',
         path: path.resolve(__dirname, 'dist'),
     },
+
     resolve: {
         extensions: [ '.tsx', '.ts', '.js' ],
     },
+
     devServer: {
         contentBase: path.join(__dirname, 'dist'),
         publicPath: "/",
         compress: true,
         port: 8080
     },
+
     plugins: [
         new CopyWebpackPlugin({
             patterns: [

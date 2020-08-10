@@ -3,14 +3,8 @@ const CopyWebpackPlugin = require('copy-webpack-plugin')
 const TerserPlugin = require('terser-webpack-plugin')
 const webpack = require('webpack')
 
-/*
-TODO
-UglifyJs plugin to minify my code
-probably not necessary to swap
-*/
-
 module.exports = {
-    devtool: 'inline-source-map',
+    devtool: false,
     module: {
         rules: [
             {
@@ -65,21 +59,21 @@ module.exports = {
         }),
     ],
 
-    // FIXME not working as i expected it seems
+    performance: {
+        maxEntrypointSize: 900000,
+        maxAssetSize: 900000
+    },
+
     optimization: {
-        splitChunks: {
-            cacheGroups: {
-                vendors: {
-                    priority: -10,
-                    test: /[\\/]node_modules[\\/]/
-                }
-            },
-            chunks: 'async',
-            minChunks: 1,
-            minSize: 30000,
-            name: false
-        },
         minimize: true,
-        minimizer: [new TerserPlugin()],
+        minimizer: [
+            new TerserPlugin({
+                terserOptions: {
+                    output: {
+                        comments: false
+                    }
+                }
+            })
+        ],
     }
 }

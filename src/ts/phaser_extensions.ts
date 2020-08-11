@@ -9,41 +9,48 @@ Phaser.Scene.prototype.addButton = function(
     downFrame: string | integer,
     width?: number,
     height?: number,
-): Phaser.GameObjects.Sprite {
+): Phaser.GameObjects.Container {
 
-    let btn = this.add.sprite(x, y, texture, outFrame)
-        .setOrigin(0)
-        .setInteractive()
-
+    let btn = this.add.sprite(x, y, texture, outFrame).setOrigin(0)
     let myWidth = width != null ? width : btn.width
     let myHeight = height != null ? height : btn.height
-    btn.setSize(myWidth, myHeight)
-    btn.setDisplaySize(myWidth, myHeight)
+    btn.setDisplaySize(myWidth, myHeight).setSize(myWidth, myHeight)
 
-    btn.on(Phaser.Input.Events.GAMEOBJECT_POINTER_OVER, function() {
-        this.setDisplaySize(myWidth, myHeight)
-        this.setFrame(overFrame)
-        return this
-    })
+    let hitBox = new Phaser.Geom.Rectangle(x, y, width, height)
+    let btnContainer = new Phaser.GameObjects.Container(this, x, y)
+        .setInteractive(hitBox, (hitArea: any, x: number, y: number) => {
+                return x >= 0
+                    && x <= hitArea.width
+                    && y >= 0
+                    && y <= hitArea.height
+            }
+        )
 
-    btn.on(Phaser.Input.Events.GAMEOBJECT_POINTER_OUT,  function() {
-        this.setDisplaySize(myWidth, myHeight)
-        this.setFrame(outFrame)
-        return this
-    })
+    btnContainer.on(Phaser.Input.Events.GAMEOBJECT_POINTER_OVER, function() {
+        return this.setFrame(overFrame, false, false)
+            .setDisplaySize(myWidth, myHeight)
+            .setSize(myWidth, myHeight)
+    }, btn)
 
-    btn.on('pointerdown', function() {
-        this.setDisplaySize(myWidth*.8, myHeight*.8)
-        this.setFrame(downFrame)
-        return this
-    })
+    btnContainer.on(Phaser.Input.Events.GAMEOBJECT_POINTER_OUT,  function() {
+        return this.setFrame(outFrame, false, false)
+            .setDisplaySize(myWidth, myHeight)
+            .setSize(myWidth, myHeight)
+    }, btn)
 
-    btn.on('pointerup', function() {
-        this.setDisplaySize(myWidth, myHeight)
-        this.setFrame(overFrame)
+    btnContainer.on(Phaser.Input.Events.GAMEOBJECT_POINTER_DOWN, function() {
+        return this.setFrame(downFrame, false, false)
+            .setDisplaySize(myWidth*0.8, myHeight*0.8)
+            .setSize(myWidth*0.8, myHeight*0.8)
+    }, btn)
+
+    btnContainer.on(Phaser.Input.Events.GAMEOBJECT_POINTER_UP, function() {
+        this.setFrame(overFrame, false, false)
+            .setDisplaySize(myWidth, myHeight)
+            .setSize(myWidth, myHeight)
         callback.bind(callbackContext).call()
         return this
-    })
+    }, btn)
 
-    return btn
+    return btnContainer
 }

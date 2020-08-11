@@ -4,7 +4,7 @@ import InfoContainer from "./info_container"
 import RenderTexture = Phaser.GameObjects.RenderTexture
 import Rectangle = Phaser.GameObjects.Rectangle
 import BaseSound = Phaser.Sound.BaseSound
-import Sprite = Phaser.GameObjects.Sprite
+import Container = Phaser.GameObjects.Container;
 
 export class GameScene extends Phaser.Scene {
 
@@ -28,8 +28,8 @@ export class GameScene extends Phaser.Scene {
     private grid: SquareInfo[][] = []
     private infoContainer: InfoContainer
     private music: BaseSound
-    private playButton: Sprite
-    private pauseButton: Sprite
+    private playButton: Container
+    private pauseButton: Container
 
     // enables and disables our game ticks
     private running: boolean = false
@@ -202,14 +202,23 @@ export class GameScene extends Phaser.Scene {
         return Math.floor(yPixel/this.sqHeight)
     }
 
-    private toggleTileByPixel(xPixel: number, yPixel: number): void {
+    /**
+     * @return boolean success
+     */
+    private toggleTileByPixel(xPixel: number, yPixel: number): boolean {
         let x = this.xTileFromPixel(xPixel)
         let y = this.yTileFromPixel(yPixel)
-        this.toggleTile(x, y)
+        return this.toggleTile(x, y)
     }
 
-    private toggleTile(x: number, y: number): void {
+    /**
+     * @return boolean success
+     */
+    private toggleTile(x: number, y: number): boolean {
         let squareInfo = this.grid[y][x]
+        if (squareInfo == null) {
+            return false
+        }
 
         let square
         if (squareInfo.isAlive()) {
@@ -221,6 +230,7 @@ export class GameScene extends Phaser.Scene {
         }
 
         this.worldTexture.draw(square, squareInfo.xPixel, squareInfo.yPixel)
+        return true
     }
 
     private getNeighbors(x: number, y: number): SquareInfo[] {

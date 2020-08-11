@@ -11,11 +11,11 @@ Phaser.Scene.prototype.addButton = function(
     height?: number,
 ): Phaser.GameObjects.Sprite {
 
-    let tint = 0x707070
+    const tint = 0x707070
 
-    let btn = this.add.sprite(x, y, texture, outFrame)
-    let myWidth = width != null ? width : btn.width
-    let myHeight = height != null ? height : btn.height
+    const btn = this.add.sprite(x, y, texture, outFrame)
+    const myWidth = width != null ? width : btn.width
+    const myHeight = height != null ? height : btn.height
 
     return btn.setDisplaySize(myWidth, myHeight)
         .setOrigin(0)

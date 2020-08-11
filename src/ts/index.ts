@@ -1,6 +1,6 @@
 import "phaser"
-import {GameScene} from "./game_scene"
-import {TitleScene} from "./title_scene"
+import {GameScene} from "./gameScene"
+import {TitleScene} from "./titleScene"
 
 const config: Phaser.Types.Core.GameConfig = {
     type: Phaser.AUTO,
@@ -13,6 +13,6 @@ const config: Phaser.Types.Core.GameConfig = {
     height: 720
 }
 
-let game = new Phaser.Game(config)
+const game = new Phaser.Game(config)
 game.scene.add(GameScene.NAME, new GameScene())
 game.scene.add(TitleScene.NAME, new TitleScene(), true)

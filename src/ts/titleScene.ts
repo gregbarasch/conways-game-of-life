@@ -1,4 +1,4 @@
-import {GameScene} from "./game_scene"
+import {GameScene} from "./gameScene"
 
 export class TitleScene extends Phaser.Scene {
 
@@ -20,7 +20,7 @@ export class TitleScene extends Phaser.Scene {
     }
 
     public create(): void {
-        let coinSound = this.sound.add('coin')
+        const coinSound = this.sound.add('coin')
 
         this.cameras.main.fadeIn(4000)
         this.add.image(this.cameras.main.width/2, this.cameras.main.height/2, 'title_screen')

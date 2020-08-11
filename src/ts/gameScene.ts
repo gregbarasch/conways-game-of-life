@@ -1,5 +1,7 @@
-import "./phaser_extensions"
-import InfoContainer from "./info_container"
+import "./phaserExtensions"
+import {InfoContainer} from "./infoContainer"
+import {SquareInfo} from "./squareInfo"
+import {State} from "./squareInfo"
 
 import RenderTexture = Phaser.GameObjects.RenderTexture
 import Rectangle = Phaser.GameObjects.Rectangle
@@ -81,8 +83,8 @@ export class GameScene extends Phaser.Scene {
         for (let y = 0; y < GameScene.Y_NUM; y++) {
             this.grid[y] = []
             for (let x = 0; x < GameScene.X_NUM; x++) {
-                let xPixel = this.xPixelFromTile(x)
-                let yPixel = this.yPixelFromTile(y)
+                const xPixel = this.xPixelFromTile(x)
+                const yPixel = this.yPixelFromTile(y)
                 this.worldTexture.draw(this.deadSquare, xPixel, yPixel)
                 this.grid[y][x] = new SquareInfo(xPixel, yPixel)
             }
@@ -111,8 +113,8 @@ export class GameScene extends Phaser.Scene {
         this.add.existing(this.infoContainer)
 
         // Add my UI buttons
-        let x = this.gridWidth
-        let buttonSize = this.game.canvas.width - this.gridWidth
+        const x = this.gridWidth
+        const buttonSize = this.game.canvas.width - this.gridWidth
 
         this.playButton = this.addButton(
             x, 0,
@@ -174,7 +176,7 @@ export class GameScene extends Phaser.Scene {
             if (this.timer >= GameScene.UPDATE_MS) {
 
                 // stage then apply the new state
-                let changes: SquareInfo[] = this.stageTick()
+                const changes: SquareInfo[] = this.stageTick()
                 this.applyTick(changes)
 
                 // reduce our timer back below our threshold so that we can continue iteration
@@ -203,13 +205,13 @@ export class GameScene extends Phaser.Scene {
     }
 
     private toggleTileByPixel(xPixel: number, yPixel: number): void {
-        let x = this.xTileFromPixel(xPixel)
-        let y = this.yTileFromPixel(yPixel)
+        const x = this.xTileFromPixel(xPixel)
+        const y = this.yTileFromPixel(yPixel)
         this.toggleTile(x, y)
     }
 
     private toggleTile(x: number, y: number): void {
-        let squareInfo = this.grid[y][x]
+        const squareInfo = this.grid[y][x]
 
         let square
         if (squareInfo.isAlive()) {
@@ -224,16 +226,16 @@ export class GameScene extends Phaser.Scene {
     }
 
     private getNeighbors(x: number, y: number): SquareInfo[] {
-        let neighbors: SquareInfo[] = []
+        const neighbors: SquareInfo[] = []
 
-        let startX = (x-1 < 0) ? x : x-1
-        let startY = (y-1 < 0) ? y : y-1
-        let endX   = (x+1 >= GameScene.X_NUM) ? x : x+1
-        let endY   = (y+1 >= GameScene.Y_NUM) ? y : y+1
+        const startX = (x-1 < 0) ? x : x-1
+        const startY = (y-1 < 0) ? y : y-1
+        const endX   = (x+1 >= GameScene.X_NUM) ? x : x+1
+        const endY   = (y+1 >= GameScene.Y_NUM) ? y : y+1
 
         for (let row=startY; row<=endY; row++) {
             for (let col=startX; col<=endX; col++) {
-                if (y != row || x != col) {
+                if (y !== row || x !== col) {
                     neighbors.push(this.grid[row][col])
                 }
             }
@@ -243,9 +245,9 @@ export class GameScene extends Phaser.Scene {
     }
 
     private stageTick(): SquareInfo[] {
-        let changed: SquareInfo[] = []
+        const changed: SquareInfo[] = []
         this.grid.forEach(row => row.forEach(square => {
-            if (square.state != square.getNextState()) {
+            if (square.state !== square.getNextState()) {
                 changed.push(square)
             }
         }))
@@ -265,45 +267,5 @@ export class GameScene extends Phaser.Scene {
                 this.worldTexture.draw(this.deadSquare, square.xPixel, square.yPixel)
             }
         }))
-    }
-}
-
-enum State {
-    DEAD,
-    ALIVE,
-}
-
-class SquareInfo {
-
-    public readonly xPixel: number
-    public readonly yPixel: number
-    public state: State
-    // For convenience and to reduce garbage collection
-    public neighbors: SquareInfo[]
-
-    public constructor(xPixel: number, yPixel: number, state: State = State.DEAD) {
-        this.xPixel = xPixel
-        this.yPixel = yPixel
-        this.state = state
-    }
-
-    public isAlive(): boolean {
-        return this.state == State.ALIVE
-    }
-
-    // Dependent on neighbors var
-    public getNextState(): State {
-        let numLiveNeighbors = this.neighbors
-            .filter(neighbor => neighbor.isAlive())
-            .length
-
-        // Here are the rule's of the game
-        if (this.isAlive() && numLiveNeighbors >= 2 && numLiveNeighbors <= 3) {
-            return State.ALIVE
-        } else if (!this.isAlive() && numLiveNeighbors == 3) {
-            return State.ALIVE
-        } else {
-            return State.DEAD
-        }
     }
 }

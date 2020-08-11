@@ -13,6 +13,6 @@ declare module "phaser" {
             downFrame: string | integer,
             width?: number,
             height?: number,
-        ): Phaser.GameObjects.Container
+        ): Phaser.GameObjects.Sprite
     }
 }

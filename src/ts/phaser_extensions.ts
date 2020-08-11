@@ -11,39 +11,24 @@ Phaser.Scene.prototype.addButton = function(
     height?: number,
 ): Phaser.GameObjects.Sprite {
 
-    let btn = this.add.sprite(x, y, texture, outFrame)
-        .setOrigin(0)
-        .setInteractive()
+    let tint = 0x808080
 
+    let btn = this.add.sprite(x, y, texture, outFrame)
     let myWidth = width != null ? width : btn.width
     let myHeight = height != null ? height : btn.height
-    btn.setSize(myWidth, myHeight)
-    btn.setDisplaySize(myWidth, myHeight)
 
-    btn.on(Phaser.Input.Events.GAMEOBJECT_POINTER_OVER, function() {
-        this.setDisplaySize(myWidth, myHeight)
-        this.setFrame(overFrame)
-        return this
-    })
-
-    btn.on(Phaser.Input.Events.GAMEOBJECT_POINTER_OUT,  function() {
-        this.setDisplaySize(myWidth, myHeight)
-        this.setFrame(outFrame)
-        return this
-    })
-
-    btn.on('pointerdown', function() {
-        this.setDisplaySize(myWidth*.8, myHeight*.8)
-        this.setFrame(downFrame)
-        return this
-    })
-
-    btn.on('pointerup', function() {
-        this.setDisplaySize(myWidth, myHeight)
-        this.setFrame(overFrame)
-        callback.bind(callbackContext).call()
-        return this
-    })
-
-    return btn
+    return btn.setDisplaySize(myWidth, myHeight)
+        .setOrigin(0)
+        .setInteractive()
+        .on(Phaser.Input.Events.GAMEOBJECT_POINTER_OVER, function() {
+            return this.setFrame(overFrame, false, false).clearTint()
+        }).on(Phaser.Input.Events.GAMEOBJECT_POINTER_OUT,  function() {
+            return this.setFrame(outFrame, false, false).clearTint()
+        }).on(Phaser.Input.Events.GAMEOBJECT_POINTER_DOWN, function() {
+            return this.setFrame(downFrame, false, false).setTint(tint)
+        }).on(Phaser.Input.Events.GAMEOBJECT_POINTER_UP, function() {
+            this.setFrame(overFrame, false, false).clearTint()
+            callback.bind(callbackContext).call()
+            return this
+        })
 }

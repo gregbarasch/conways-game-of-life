@@ -11,7 +11,7 @@ Phaser.Scene.prototype.addButton = function(
     height?: number,
 ): Phaser.GameObjects.Sprite {
 
-    let tint = 0x808080
+    let tint = 0x707070
 
     let btn = this.add.sprite(x, y, texture, outFrame)
     let myWidth = width != null ? width : btn.width
